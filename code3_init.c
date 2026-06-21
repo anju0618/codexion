@@ -1,28 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   code3_init.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/06/20 00:26:33 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/22 00:42:30 by amakino          ###   ########.fr       */
+/*   Created: 2026/06/22 00:37:07 by amakino           #+#    #+#             */
+/*   Updated: 2026/06/22 00:42:24 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-int	main(int ac, char **av)
+int	init(t_config *config, t_dongle **dongles, t_coder **coders, char **av)
 {
-	t_config	config;
-	t_dongle	*dongles;
-	t_coder		*coders;
-
-	if (ac != 9)
-		return (fprintf(stderr, "Error: need 8 args.\n"), 1);
-	if (!init(&config, &dongles, &coders, av))
-		return (1);
-	free(dongles);
-	free(coders);
-	return (0);
+	if (!parse_arguments(config, av))
+		return (0);
+	*dongles = malloc(sizeof(t_dongle) * config->num_coders);
+	*coders = malloc(sizeof(t_coder) * config->num_coders);
+	if (!(*dongles) || !(*coders))
+	{
+		free(*dongles);
+		free(*coders);
+		return (fprintf(stderr, "Error: malloc failed\n"), 0);
+	}
+	return (1);
 }
