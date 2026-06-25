@@ -6,7 +6,7 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:41:37 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/26 02:26:15 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/26 02:31:38 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,9 +68,15 @@ int	parse_arguments(t_config *config, char **av)
 int	validate_conf(t_config *config, char **av)
 {
 	if (config->num_coders <= 0)
+	{
+		fprintf(stderr, "Error: number_of_coders must be strictly positive\n");
 		return (0);
+	}
 	if (strcmp(av[8], "fifo") != 0 && strcmp(av[8], "edf") != 0)
+	{
+		fprintf(stderr, "Error: scheduler must be 'fifo' or 'edf'\n");
 		return (0);
+	}
 	config->scheduler = av[8];
 	return (1);
 }
