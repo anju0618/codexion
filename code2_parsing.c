@@ -27,6 +27,7 @@ int	is_numeric_str(char *str)
 	}
 	return (1);
 }
+
 /**
  * @brief avを実際に格納
  * @return 0 or 1
