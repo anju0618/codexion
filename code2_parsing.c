@@ -27,13 +27,16 @@ int	is_numeric_str(char *str)
 	}
 	return (1);
 }
-
+/**
+ * @brief avを実際に格納
+ * @return 0 or 1
+ */
 int	parse_arguments(t_config *config, char **av)
 {
 	int	i;
 
 	i = 1;
-	while (av[i])
+	while (av[i] && i < 8)
 	{
 		if (!is_numeric_str(av[i]))
 		{
@@ -43,10 +46,10 @@ int	parse_arguments(t_config *config, char **av)
 		i++;
 	}
 	config->num_coders = atoi(av[1]);
-	config->time_to_burnout = atoi(av[2]);
-	config->time_to_compile = atoi(av[3]);
-	config->time_to_debug = atoi(av[4]);
-	config->time_to_refactor = atoi(av[5]);
+	config->time_burnout = atoi(av[2]);
+	config->time_compile = atoi(av[3]);
+	config->time_debug = atoi(av[4]);
+	config->time_refactor = atoi(av[5]);
 	config->num_compile_req = atoi(av[6]);
 	config->dongle_cooldown = atoi(av[7]);
 	if (!validate_conf(config, av))

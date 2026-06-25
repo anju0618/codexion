@@ -12,6 +12,10 @@
 
 #include "codexion.h"
 
+/**
+ * @brief 初期化
+ * @return 0 or 1
+ */
 int init(t_config *config, t_dongle **dongles, t_coder **coders, char **av)
 {
     int i;

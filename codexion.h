@@ -24,21 +24,23 @@
 /**arg structure**/
 typedef struct s_config
 {
-	int		num_coders;
-	int		time_burnout;
-	int		time_compile;
-	int		time_debug;
-	int		time_refactor;
-	int		num_compiles_req;
-	int		dongle_cooldown;
-	char	*scheduler;
+	int				num_coders;
+	int				time_burnout;
+	int				time_compile;
+	int				time_debug;
+	int				time_refactor;
+	int				num_compile_req;
+	int				dongle_cooldown;
+	char			*scheduler;
+	pthread_mutex_t	print_mutex;
+	long long		start_time;
 }	t_config;
 
 /**dongle structure**/
 typedef struct s_dongle
 {
 	int				id;
-	pthread_mutex	mutex;
+	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
 	long long		cooldown_end;
 }	t_dongle;
@@ -47,16 +49,23 @@ typedef struct s_dongle
 typedef struct s_coder
 {
 	int				id;
-	pthread_cond_t	thread_id;
-	int				complile_count;
-	longlong		deadline;
+	pthread_t		thread_id;
+	int				compile_count;
+	long long		deadline;
 	t_dongle		*left_dongle;
 	t_dongle		*right_dongle;
 	t_config		*config;
 }	t_coder;
+/**main.c**/
+void		print_state(t_coder *coder, const char *state);
 /** code2_parsing.c **/
-int	is_numeric_str(char *str);
-int	parse_arguments(t_config *config, char **av);
-int	validate_conf(t_config *config, char **av);
+int			is_numeric_str(char *str);
+int			parse_arguments(t_config *config, char **av);
+int			validate_conf(t_config *config, char **av);
+/** code3_init.c**/
+int 		init(t_config *config, t_dongle **dongles, t_coder **coders, char **av);
+/** code4_utils.c **/
+long long	get_time_ms(void);
+void		precise_usleep(long long target_ms);
 
 #endif
