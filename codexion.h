@@ -6,7 +6,7 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:27:04 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/25 17:41:01 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/26 01:05:23 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,7 @@ typedef struct s_config
 	int				dongle_cooldown;
 	char			*scheduler;
 	pthread_mutex_t	print_mutex;
+	pthread_mutex_t	state_mutex;
 	long long		start_time;
 	int				stop_flag;
 }	t_config;
@@ -79,9 +80,11 @@ int			run_simulation(t_config *config, t_coder *coders);
 int			is_numeric_str(char *str);
 int			parse_arguments(t_config *config, char **av);
 int			validate_conf(t_config *config, char **av);
-/** code3_init.c**/
+/** code3_init.c **/
 int			init(t_config *config, t_dongle **dongles,
 				t_coder **coders, char **av);
+int			setup_elements(t_config *config,
+				t_dongle *dongles, t_coder *coders);
 /** code4_utils.c **/
 long long	get_time_ms(void);
 void		precise_usleep(long long target_ms);

@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   code4_utils.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amakino <amakino@student.42tokyo.jp>       +#+  +:+       +#+        */
+/*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/24 14:22:15 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/25 17:40:34 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/26 02:15:35 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 /**
- * @brief 現在のシステム時刻をエポック秒からミリ秒精度(ms)に集約して算出・返却する
- * @return long long 型の現在ミリ秒時刻
+ * @brief: 現在のシステム時刻をミリ秒精度(ms)で取得する。
+ * @detail: gettimeofdayを使用し、秒tv_secとマイクロ秒tv_usecから現在の絶対的なミリ秒。
  */
 long long	get_time_ms(void)
 {
@@ -26,8 +26,8 @@ long long	get_time_ms(void)
 }
 
 /**
- * @brief 通常のusleepのOS側揺らぎを排除し、ミリ秒単位待機
- * @param target_ms スリープして引き止めたい目標のミリ秒数
+ * @brief: OS側による usleep の過剰なスリープ（揺らぎ）を排除し、正確なミリ秒単位の待機を実現する。
+ * @detail: 100マイクロ秒刻みで現在時刻を確認しながら待機
  */
 void	precise_usleep(long long target_ms)
 {

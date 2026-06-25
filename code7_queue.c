@@ -3,43 +3,47 @@
 /*                                                        :::      ::::::::   */
 /*   code7_queue.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amakino <amakino@student.42tokyo.jp>       +#+  +:+       +#+        */
+/*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/25 17:48:34 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/25 17:48:36 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/26 02:21:38 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
 /**
- * @brief コーダーの優先度
- * @return 1 (aの高) / 0 (bの高)
- * @note edfならdeadlineが近い順、fifoならrequext_timeが早い順。
- * 同値の場合はIDが小さい方を先
+ * @brief: 2つのコーダーの優先度を判定・比較
+ * @detail: "edf" の場合は deadline が近い方を、"fifo" の場合は request_time が早い方を優先
+ * @detail: もし同値だった場合は、コーダーIDが小さい方を優先します（Tie-breaker）
  */
 int	is_higher_priority(t_coder *a, t_coder *b, char *scheduler)
 {
+	int	res;
+
+	pthread_mutex_lock(&a->config->state_mutex);
 	if (strcmp(scheduler, "edf") == 0)
 	{
-		if (a->deadline < b->deadline)
-			return (1);
-		if (a->deadline > b->deadline)
-			return (0);
-		return (a->id < b->id);
+		if (a->deadline != b->deadline)
+			res = (a->deadline < b->deadline);
+		else
+			res = (a->id < b->id);
 	}
 	else
 	{
-		if (a->request_time < b->request_time)
-			return (1);
-		if (a->request_time > b->request_time)
-			return (0);
-		return (a->id < b->id);
+		if (a->request_time != b->request_time)
+			res = (a->request_time < b->request_time);
+		else
+			res = (a->id < b->id);
 	}
+	pthread_mutex_unlock(&a->config->state_mutex);
+	return (res);
 }
 
 /**
- * @brief queueに追加された末尾の要素を正しい位置まで上昇
+ * @brief: ヒープ木に追加された要素を正しい優先度位置まで浮上
+ * @detail: キューの末尾に追加された要素を、親要素と優先度を比較
+ * @detail: 自分の方が優先度が高ければ入れ替える（Swap）処理を、根（Root）に達するまで繰り返します。
  */
 static void	up_heap(t_dongle *dongle, t_coder *coders, int idx)
 {
@@ -74,7 +78,9 @@ void	push_queue(t_dongle *dongle, t_coder *coders, int coder_id)
 }
 
 /**
- * @brief 先頭に持ってきた要素を正しい位置まで下降
+ * @brief: 先頭要素を取り出した後、末尾から持ってきた要素を正しい位置までdown
+ * @detail: 左右の子要素のより優先度が高い方と自分を比較.
+ * @detail: 自分の方が優先度が低ければ入れ替える処理を、葉（Leaf）に達するまで繰り返してヒープを再構築
  */
 static void	down_heap(t_dongle *dongle, t_coder *coders, int idx)
 {

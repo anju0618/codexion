@@ -6,7 +6,7 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:41:37 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/25 17:40:00 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/26 02:04:13 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,6 @@
 
 /**
  * @brief 文字列が「正の整数のみ」で構成されているかを判定する
- * @param str チェック対象の文字列
- * @return 1(True)/ 0(False)
  */
 int	is_numeric_str(char *str)
 {
@@ -35,9 +33,7 @@ int	is_numeric_str(char *str)
 
 /**
  * @brief 設定値の妥当性を検証し、スケジューラをセットする
- * @param config 設定格納用構造体へのポインタ
- * @param av コマンドライン引数配列
- * @return 1 (ok) / 0 (Error)
+ * @detail: 1番目から7番目までの引数がすべて数字であることを確認後、atoiで変換して構造体に格納します。
  */
 int	parse_arguments(t_config *config, char **av)
 {
@@ -67,9 +63,7 @@ int	parse_arguments(t_config *config, char **av)
 
 /**
  * @brief コマンドライン引数をパースし、型チェックを行って設定構造体に代入する
- * @param config 設定格納用構造体へのポインタ
- * @param av コマンドライン引数配列 (av[1] 〜 av[8])
- * @return 1(ok) / 0(Error)
+ * @detail: コーダーの数が0以下,第8引数の文字列がに"fifo"または"edf"であるか,不正な場合はエラー
  */
 int	validate_conf(t_config *config, char **av)
 {
