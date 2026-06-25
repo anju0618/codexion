@@ -29,6 +29,9 @@ void	setup_elements(t_config *config, t_dongle *dongles, t_coder *coders)
 		pthread_mutex_init(&(dongles[i].mutex), NULL);
 		pthread_cond_init(&(dongles[i].cond), NULL);
 		dongles[i].cooldown_end = 0;
+		dongles[i].queue = malloc(sizeof(int) * config->num_coders);
+		dongles[i].queue_size = 0;
+		dongles[i].holder_id = 0;
 		coders[i].id = i + 1;
 		coders[i].compile_count = 0;
 		coders[i].deadline = config->start_time + config->time_burnout;

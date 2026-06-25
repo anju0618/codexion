@@ -12,12 +12,22 @@
 
 #include "codexion.h"
 
-/**
- * @brief 全コーダーのdeadline超過、およびコンパイル回数の達成を走査する
- * @param coders コーダー配列
- * @param config 設定値
- * @return 1 (燃え尽き検知または目標達成によりシミュレーション終了) / 0 (全員生存継続)
- */
+static int	check_single_coder(t_coder *coder, long long now, int *all_done)
+{
+	pthread_mutex_lock(&coder->config->print_mutex);
+	if (now >= coder->deadline)
+	{
+		print_state(coder, "burned out");
+		coder->config->stop_flag = 1;
+		pthread_mutex_unlock(&coder->config->print_mutex);
+		return (1);
+	}
+	if (coder->compile_count < coder->config->num_compile_req)
+		*all_done = 0;
+	pthread_mutex_unlock(&coder->config->print_mutex);
+	return (0);
+}
+
 static int	check_coders_status(t_coder *coders, t_config *config)
 {
 	int			i;
@@ -29,25 +39,21 @@ static int	check_coders_status(t_coder *coders, t_config *config)
 	now = get_time_ms();
 	while (i < config->num_coders)
 	{
-		if (now >= coders[i].deadline)
-		{
-			print_state(&coders[i], "burned out");
-			config->stop_flag = 1;
+		if (check_single_coder(&coders[i], now, &all_done))
 			return (1);
-		}
-		if (coders[i].compile_count < config->num_compile_req)
-			all_done = 0;
 		i++;
 	}
+	pthread_mutex_lock(&config->print_mutex);
 	if (config->num_compile_req > 0 && all_done)
-		return (config->stop_flag = 1, 1);
+	{
+		config->stop_flag = 1;
+		pthread_mutex_unlock(&config->print_mutex);
+		return (1);
+	}
+	pthread_mutex_unlock(&config->print_mutex);
 	return (0);
 }
 
-/**
- * @brief 監視専用スレッドのエントリルーチン
- * @note 10msのルールを満たすため、1msという極小インターバルで常時回診します。
- */
 void	*monitor_routine(void *arg)
 {
 	t_coder		*coders;

@@ -43,7 +43,7 @@ typedef struct s_config
 
 /**
  * @struct s_dongle
- * @brief 各ドングルを管理する構造体
+ * @brief 各ドングリを管理する構造体
  */
 typedef struct s_dongle
 {
@@ -51,6 +51,9 @@ typedef struct s_dongle
 	pthread_mutex_t	mutex;
 	pthread_cond_t	cond;
 	long long		cooldown_end;
+	int				holder_id;
+	int				*queue;
+	int				queue_size;
 }	t_dongle;
 
 /**
@@ -63,11 +66,13 @@ typedef struct s_coder
 	pthread_t		thread_id;
 	int				compile_count;
 	long long		deadline;
+	long long		request_time;
 	t_dongle		*left_dongle;
 	t_dongle		*right_dongle;
 	t_config		*config;
 }	t_coder;
 /**main.c**/
+int			check_stop_flag(t_config *config);
 void		print_state(t_coder *coder, const char *state);
 int			run_simulation(t_config *config, t_coder *coders);
 /** code2_parsing.c **/
@@ -85,5 +90,9 @@ void		acquire_dongles(t_coder *coder);
 void		release_dongles(t_coder *coder);
 /** code6_monitor.c **/
 void		*monitor_routine(void *arg);
+/** code7_queue.c **/
+int			is_higher_priority(t_coder *a, t_coder *b, char *scheduler);
+void		push_queue(t_dongle *dongle, t_coder *coders, int coder_id);
+int			pop_queue(t_dongle *dongle, t_coder *coders);
 
 #endif

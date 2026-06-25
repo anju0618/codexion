@@ -12,10 +12,16 @@
 
 #include "codexion.h"
 
-/**
- * @brief ログを標準出力にプリントする
- * @note Serialization破壊と、ゴーストログ発生を防止
- */
+int	check_stop_flag(t_config *config)
+{
+	int	res;
+
+	pthread_mutex_lock(&config->print_mutex);
+	res = config->stop_flag;
+	pthread_mutex_unlock(&config->print_mutex);
+	return (res);
+}
+
 void	print_state(t_coder *coder, const char *state)
 {
 	long long	timestamp;
@@ -29,37 +35,31 @@ void	print_state(t_coder *coder, const char *state)
 	pthread_mutex_unlock(&coder->config->print_mutex);
 }
 
-/**
- * @brief コーダー各人がループし続けるシミュレーションルーチン
- * @param arg 自スレッドの構造体情報(t_coder*)
- */
 void	*coder_routine(void *arg)
 {
 	t_coder		*coder;
-	t_config	*config;
 
 	coder = (t_coder *)arg;
-	config = coder->config;
-	while (!config->stop_flag)
+	while (!check_stop_flag(coder->config))
 	{
 		acquire_dongles(coder);
-		coder->deadline = get_time_ms() + config->time_burnout;
+		pthread_mutex_lock(&coder->config->print_mutex);
+		coder->deadline = get_time_ms() + coder->config->time_burnout;
+		pthread_mutex_unlock(&coder->config->print_mutex);
 		print_state(coder, "is compiling");
-		precise_usleep(config->time_compile);
+		precise_usleep(coder->config->time_compile);
+		pthread_mutex_lock(&coder->config->print_mutex);
 		coder->compile_count++;
+		pthread_mutex_unlock(&coder->config->print_mutex);
 		release_dongles(coder);
 		print_state(coder, "is debugging");
-		precise_usleep(config->time_debug);
+		precise_usleep(coder->config->time_debug);
 		print_state(coder, "is refactoring");
-		precise_usleep(config->time_refactor);
+		precise_usleep(coder->config->time_refactor);
 	}
 	return (NULL);
 }
 
-/**
- * @brief 監視スレッド1と、各コーダースレッドを一斉に射出して合流を待つ
- * @return 1 (OK) / 0 (Error)
- */
 int	run_simulation(t_config *config, t_coder *coders)
 {
 	pthread_t	monitor_id;
@@ -85,14 +85,12 @@ int	run_simulation(t_config *config, t_coder *coders)
 	return (1);
 }
 
-/**
- * @brief プログラムのメインエントリ
- */
 int	main(int ac, char **av)
 {
 	t_config	config;
 	t_dongle	*dongles;
 	t_coder		*coders;
+	int			i;
 
 	if (ac != 9)
 		return (fprintf(stderr, "Error: need 8 args.\n"), 1);
@@ -101,6 +99,14 @@ int	main(int ac, char **av)
 	pthread_mutex_init(&config.print_mutex, NULL);
 	run_simulation(&config, coders);
 	pthread_mutex_destroy(&config.print_mutex);
+	i = 0;
+	while (i < config.num_coders)
+	{
+		pthread_mutex_destroy(&dongles[i].mutex);
+		pthread_cond_destroy(&dongles[i].cond);
+		free(dongles[i].queue);
+		i++;
+	}
 	free(dongles);
 	free(coders);
 	return (0);
