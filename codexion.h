@@ -58,6 +58,7 @@ typedef struct s_coder
 	t_config		*config;
 }	t_coder;
 /**main.c**/
+void		print_state(t_coder *coder, const char *state);
 int			run_simulation(t_config *config, t_coder *coders);
 /** code2_parsing.c **/
 int			is_numeric_str(char *str);
@@ -70,7 +71,6 @@ int			init(t_config *config, t_dongle **dongles,
 long long	get_time_ms(void);
 void		precise_usleep(long long target_ms);
 /** code5_actions.c **/
-void		print_state(t_coder *coder, const char *state);
 void		acquire_dongles(t_coder *coder);
 void		release_dongles(t_coder *coder);
 /** code6_monitor.c **/

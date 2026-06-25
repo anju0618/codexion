@@ -12,16 +12,6 @@
 
 #include "codexion.h"
 
-void	print_state(t_coder *coder, const char *state)
-{
-	long long	timestamp;
-
-	pthread_mutex_lock(&coder->config->print_mutex);
-	timestamp = get_time_ms() - coder->config->start_time;
-	printf("%lld %d %s\n", timestamp, coder->id, state);
-	pthread_mutex_unlock(&coder->config->print_mutex);
-}
-
 void	acquire_dongles(t_coder *coder)
 {
 	if (coder->id % 2 != 0)

@@ -12,6 +12,19 @@
 
 #include "codexion.h"
 
+void	print_state(t_coder *coder, const char *state)
+{
+	long long	timestamp;
+
+	pthread_mutex_lock(&coder->config->print_mutex);
+	if (!coder->config->stop_flag || strcmp(state, "burned out") == 0)
+	{
+		timestamp = get_time_ms() - coder->config->start_time;
+		printf("%lld %d %s\n", timestamp, coder->id, state);
+	}
+	pthread_mutex_unlock(&coder->config->print_mutex);
+}
+
 void	*coder_routine(void *arg)
 {
 	t_coder		*coder;
@@ -19,7 +32,7 @@ void	*coder_routine(void *arg)
 
 	coder = (t_coder *)arg;
 	config = coder->config;
-	while (1)
+	while (!config->stop_flag)
 	{
 		acquire_dongles(coder);
 		coder->deadline = get_time_ms() + config->time_burnout;
@@ -32,24 +45,22 @@ void	*coder_routine(void *arg)
 		print_state(coder, "is refactoring");
 		precise_usleep(config->time_refactor);
 	}
-	if (config->stop_flag)
-		return (NULL);
 	return (NULL);
 }
 
 int	run_simulation(t_config *config, t_coder *coders)
 {
-	int	i;
+	pthread_t	monitor_id;
+	int			i;
 
+	if (pthread_create(&monitor_id, NULL, monitor_routine, coders))
+		return (0);
 	i = 0;
 	while (i < config->num_coders)
 	{
-		if (pthread_create(&coders[i].thread_id, NULL,
-				coder_routine, &coders[i]))
-		{
-			fprintf(stderr, "Error: Failed to create thread\n");
+		if (pthread_create(&coders[i].thread_id, NULL, coder_routine,
+				&coders[i]))
 			return (0);
-		}
 		i++;
 	}
 	i = 0;
@@ -58,6 +69,7 @@ int	run_simulation(t_config *config, t_coder *coders)
 		pthread_join(coders[i].thread_id, NULL);
 		i++;
 	}
+	pthread_join(monitor_id, NULL);
 	return (1);
 }
 
