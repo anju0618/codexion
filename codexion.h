@@ -6,7 +6,7 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:27:04 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/22 00:40:02 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/25 17:41:01 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,11 @@
 # include <string.h>
 # include <unistd.h>
 
-/**arg structure**/
+/**
+ * @struct s_config
+ * @brief シミュレーション全体の設定値を保持する構造体
+ * * すべての引数パラメータや、共有する終了フラグ、出力保護用Mutexを格納します。
+ */
 typedef struct s_config
 {
 	int				num_coders;
@@ -37,7 +41,10 @@ typedef struct s_config
 	int				stop_flag;
 }	t_config;
 
-/**dongle structure**/
+/**
+ * @struct s_dongle
+ * @brief 各ドングルを管理する構造体
+ */
 typedef struct s_dongle
 {
 	int				id;
@@ -46,7 +53,10 @@ typedef struct s_dongle
 	long long		cooldown_end;
 }	t_dongle;
 
-/**coder structure**/
+/**
+ * @struct s_coder
+ * @brief 各コーダー（個別スレッド）のをポインタで管理する構造体
+ */
 typedef struct s_coder
 {
 	int				id;

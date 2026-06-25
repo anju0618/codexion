@@ -6,13 +6,18 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/22 00:37:07 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/22 01:12:57 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/25 17:40:26 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-/*配列への値代入*/
+/**
+ * @brief 確保された各構造体配列の各メンバに初期値およびドングリポインタを紐付ける
+ * @param config 設定構造体ポインタ
+ * @param dongles ドングリ構造体配列
+ * @param coders コーダー構造体配列
+ */
 void	setup_elements(t_config *config, t_dongle *dongles, t_coder *coders)
 {
 	int	i;
@@ -35,8 +40,12 @@ void	setup_elements(t_config *config, t_dongle *dongles, t_coder *coders)
 }
 
 /**
- * @brief 初期化
- * @return 0 or 1
+ * @brief パースのトリガーを引き、タイムスタンプ基準点の記録、及びメモリ確保・初期化
+ * @param config 設定構造体へのポインタ
+ * @param dongles ドングリポインタの受取用アドレス
+ * @param coders コーダーポインタの受取用アドレス
+ * @param av コマンドライン引数
+ * @return 1(ok) / 0(Error)
  */
 int	init(t_config *config, t_dongle **dongles, t_coder **coders, char **av)
 {

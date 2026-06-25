@@ -6,12 +6,17 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:41:37 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/20 01:06:27 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/25 17:40:00 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+/**
+ * @brief 文字列が「正の整数のみ」で構成されているかを判定する
+ * @param str チェック対象の文字列
+ * @return 1(True)/ 0(False)
+ */
 int	is_numeric_str(char *str)
 {
 	int	i;
@@ -29,8 +34,10 @@ int	is_numeric_str(char *str)
 }
 
 /**
- * @brief avを実際に格納
- * @return 0 or 1
+ * @brief 設定値の妥当性を検証し、スケジューラをセットする
+ * @param config 設定格納用構造体へのポインタ
+ * @param av コマンドライン引数配列
+ * @return 1 (ok) / 0 (Error)
  */
 int	parse_arguments(t_config *config, char **av)
 {
@@ -58,6 +65,12 @@ int	parse_arguments(t_config *config, char **av)
 	return (1);
 }
 
+/**
+ * @brief コマンドライン引数をパースし、型チェックを行って設定構造体に代入する
+ * @param config 設定格納用構造体へのポインタ
+ * @param av コマンドライン引数配列 (av[1] 〜 av[8])
+ * @return 1(ok) / 0(Error)
+ */
 int	validate_conf(t_config *config, char **av)
 {
 	if (config->num_coders <= 0)

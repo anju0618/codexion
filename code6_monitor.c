@@ -6,12 +6,18 @@
 /*   By: amakino <amakino@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/25 17:05:49 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/25 17:05:51 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/25 17:40:53 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+/**
+ * @brief 全コーダーのdeadline超過、およびコンパイル回数の達成を走査する
+ * @param coders コーダー配列
+ * @param config 設定値
+ * @return 1 (燃え尽き検知または目標達成によりシミュレーション終了) / 0 (全員生存継続)
+ */
 static int	check_coders_status(t_coder *coders, t_config *config)
 {
 	int			i;
@@ -38,6 +44,10 @@ static int	check_coders_status(t_coder *coders, t_config *config)
 	return (0);
 }
 
+/**
+ * @brief 監視専用スレッドのエントリルーチン
+ * @note 10msのルールを満たすため、1msという極小インターバルで常時回診します。
+ */
 void	*monitor_routine(void *arg)
 {
 	t_coder		*coders;

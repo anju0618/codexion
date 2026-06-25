@@ -6,12 +6,16 @@
 /*   By: amakino <amakino@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/20 00:26:33 by amakino           #+#    #+#             */
-/*   Updated: 2026/06/22 00:42:30 by amakino          ###   ########.fr       */
+/*   Updated: 2026/06/25 17:41:08 by amakino          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
+/**
+ * @brief ログを標準出力にプリントする
+ * @note Serialization破壊と、ゴーストログ発生を防止
+ */
 void	print_state(t_coder *coder, const char *state)
 {
 	long long	timestamp;
@@ -25,6 +29,10 @@ void	print_state(t_coder *coder, const char *state)
 	pthread_mutex_unlock(&coder->config->print_mutex);
 }
 
+/**
+ * @brief コーダー各人がループし続けるシミュレーションルーチン
+ * @param arg 自スレッドの構造体情報(t_coder*)
+ */
 void	*coder_routine(void *arg)
 {
 	t_coder		*coder;
@@ -48,6 +56,10 @@ void	*coder_routine(void *arg)
 	return (NULL);
 }
 
+/**
+ * @brief 監視スレッド1と、各コーダースレッドを一斉に射出して合流を待つ
+ * @return 1 (OK) / 0 (Error)
+ */
 int	run_simulation(t_config *config, t_coder *coders)
 {
 	pthread_t	monitor_id;
@@ -73,6 +85,9 @@ int	run_simulation(t_config *config, t_coder *coders)
 	return (1);
 }
 
+/**
+ * @brief プログラムのメインエントリ
+ */
 int	main(int ac, char **av)
 {
 	t_config	config;
