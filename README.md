@@ -36,8 +36,20 @@ scheduler: The queue scheduling policy. Either fifo or edf (Earliest Deadline Fi
 
 ## Resources
 [POSIX Threads (pthreads) Documentation](https://hpc-tutorials.llnl.gov/posix/)
+
 [Mutexes and Condition Variables](https://computing.llnl.gov/tutorials/pthreads/)
+
+
 [Dining Philosophers Problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+
+[[C言語] pthread/mutexを使った並列処理](https://qiita.com/ryo_manba/items/e48faf2ba84f9e5d31c8)
+
+[相互排他ロックの使用方法](https://docs.oracle.com/cd/E19455-01/806-2732/6jbu8v6op/index.html)
+
+[入門者向け！C言語でのマルチスレッドをわかりやすく解説](https://daeudaeu.com/multithread/)
+
+[マルチスレッド・プログラムの開発](https://www.ibm.com/docs/ja/aix/7.1.0?topic=programming-developing-multithreaded-programs)
+
 #### AI Usage
 In this project, AI (LLM) assistance was utilized for brainstorming structural design ideas, double-checking Data Races, and formatting this README.
 
@@ -113,8 +125,20 @@ scheduler: キューのスケジューリングポリシー。fifo または edf
 
 ## Resources
 [POSIX Threads (pthreads) Documentation](https://hpc-tutorials.llnl.gov/posix/)
+
 [Mutexes and Condition Variables](https://computing.llnl.gov/tutorials/pthreads/)
+
 [Dining Philosophers Problem](https://en.wikipedia.org/wiki/Dining_philosophers_problem)
+
+[[C言語] pthread/mutexを使った並列処理](https://qiita.com/ryo_manba/items/e48faf2ba84f9e5d31c8)
+
+[相互排他ロックの使用方法](https://docs.oracle.com/cd/E19455-01/806-2732/6jbu8v6op/index.html)
+
+[入門者向け！C言語でのマルチスレッドをわかりやすく解説](https://daeudaeu.com/multithread/)
+
+[マルチスレッド・プログラムの開発](https://www.ibm.com/docs/ja/aix/7.1.0?topic=programming-developing-multithreaded-programs)
+
+
 #### AI Usage
 本プロジェクトでは、コードの構造設計時のアイデア出し、Data Raceのチェック、およびこのREADMEのフォーマット作成においてAI（LLM）の支援を活用しています。
 
