@@ -18,6 +18,7 @@
 int	is_numeric_str(char *str)
 {
 	int	i;
+	int	len;
 
 	i = 0;
 	if (!str || str[i] == '\0')
@@ -28,6 +29,14 @@ int	is_numeric_str(char *str)
 			return (0);
 		i++;
 	}
+	i = 0;
+	while (str[i] == '0')
+		i++;
+	len = strlen(&str[i]);
+	if (len > 10)
+		return (0);
+	if (len == 10 && strcmp(&str[i], "2147483647") > 0)
+		return (0);
 	return (1);
 }
 

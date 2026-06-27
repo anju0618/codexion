@@ -15,7 +15,7 @@
 /**
  * @brief: 個別のドングルとコーダーの情報を初期化する。
  * @detail: 各ドングルにMutexと条件変数（Cond）を初期化・割り当て,待機キュー用のメモリを確保
- * @detail: 各コーダーに対して左右のドングルのポインタ（left_dongle, right_dongle）をリンクさせます。
+ * @detail: 各コーダーに対して左右のドングルのポインタ（left_dongle, right_dongle）をリンク
 **/
 static int	init_single_element(t_config *config, t_dongle *dongles,
 				t_coder *coders, int i)
