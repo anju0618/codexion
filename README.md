@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by amakino*
+*This project has been created as part of the 42 curriculum by amakino.*
 
 # ENG VER
 # Codexion
@@ -159,14 +159,14 @@ Where $W$ represents the total waiting time for both adjacent USB dongles to bec
 When the total number of coders is even, they can seamlessly alternate compiling windows in perfectly synchronized pairs (e.g., in a 4-coder cluster, coders 1 & 3 compile simultaneously, then coders 2 & 4 alternate).
 * The worst-case delay $W_{\text{max}}$ is mathematically capped by exactly **1 compile time and 1 cooldown time** of a single neighbor.
 * **Maximum Execution Cycle Formula:**
-$$T_{\text{cycle\_max}} = 2 \times t_{\text{compile}} + 2 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
-* If $t_{\text{burnout}} > T_{\text{cycle\_max}}$, the execution environment is fundamentally safe from starvation.
+$$T_{\text{cycle-max}} = 2 \times t_{\text{compile}} + 2 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
+* If $t_{\text{burnout}} > T_{\text{cycle-max}}$, the execution environment is fundamentally safe from starvation.
 
 #### Case 2: Odd Number of Coders
 When the total number of coders is odd, a symmetrical alternating cycle is mathematically impossible, introducing a staggered, non-linear waiting queue.
 * In the worst-case configuration, a coder can get trapped waiting sequentially for **both** adjacent neighbors to finish their respective resource usage. This inflicts a penalty of **2 compile times and 2 cooldown times**.
 * **Maximum Execution Cycle Formula:**
-$$T_{\text{cycle\_max}} = 3 \times t_{\text{compile}} + 3 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
+$$T_{\text{cycle-max}} = 3 \times t_{\text{compile}} + 3 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
 * Odd-numbered simulations inherently demand a significantly larger $t_{\text{burnout}}$ window to allow all threads to survive.
 
 ### 📋 On-the-spot Calculation Worksheet for Evaluation
@@ -188,22 +188,22 @@ Plug the numbers into these variables:
 #### Step 2: Choose the Formula Based on Coder Count ($N$)
 
 * **If $N$ is EVEN (2, 4, 6, 8...):**
-$$T_{\text{cycle\_max}} = (2 \times t_{\text{comp}}) + (2 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
+$$T_{\text{cycle-max}} = (2 \times t_{\text{comp}}) + (2 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
 
 * **If $N$ is ODD (3, 5, 7, 9...):**
-$$T_{\text{cycle\_max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
+$$T_{\text{cycle-max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
 
 #### Step 3: Compare and Judge the Result
-Compare your calculated $T_{\text{cycle\_max}}$ against the input $T_{\text{burnout}}$:
+Compare your calculated $T_{\text{cycle-max}}$ against the input $T_{\text{burnout}}$:
 
-* 🟢 **If $T_{\text{burnout}} > T_{\text{cycle\_max}}$ :** 
+* 🟢 **If $T_{\text{burnout}} > T_{\text{cycle-max}}$ :** 
   The environment provides enough time margin. **Expected Result: All Coders MUST Survive and complete the simulation.** (If someone burns out, there is a thread scheduling bug or a data race!)
-* 🔴 **If $T_{\text{burnout}} \le T_{\text{cycle\_max}}$ :** 
+* 🔴 **If $T_{\text{burnout}} \le T_{\text{cycle-max}}$ :** 
   The environment is highly restrictive and resource contention will eventually cause starvation. **Expected Result: At least one coder is highly likely to Burnout.** (In EDF mode, they will survive significantly longer than in FIFO mode due to priority sorting).
 
 
 # JAPANESE VER
-*This project has been created as part of the 42 curriculum by amakino*
+*This project has been created as part of the 42 curriculum by amakino.*
 
 # Codexion
 
@@ -501,16 +501,16 @@ $$T_{\text{cycle}} = t_{\text{compile}} + t_{\text{cooldown}} + t_{\text{debug}}
 
 #### ケース 1: コーダーが偶数人の場合
 人数が偶数の場合、コーダーたちは綺麗に対称的なグループに分かれて交互にドングルを回すことができます（例：4人の場合、まず1番と3番が同時にコンパイルし、次に2番と4番が同時にコンパイルする、という並行サイクル）。
-* このため、最悪の待ち時間 $W_{\text{max}}$ は、隣のコーダー1人分の**「1回のコンパイル時間 ＋ 1回のクールダウン時間」**に抑えられます。
+* このため、最悪の待ち時間 $W{\text{max}}$ は、隣のコーダー1人分の**「1回のコンパイル時間 ＋ 1回のクールダウン時間」**に抑えられます。
 * **最悪値のサイクル公式:**
-$$T_{\text{cycle\_max}} = 2 \times t_{\text{compile}} + 2 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
-* $t_{\text{burnout}}$ がこの $T_{\text{cycle\_max}}$ より大きく設定されていれば、理論上飢餓は発生せず全員生存可能です。
+$$T_{\text{cycle-max}} = 2 \times t_{\text{compile}} + 2 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
+* $t_{\text{burnout}}$ がこの $T_{\text{cycle-max}}$ より大きく設定されていれば、理論上飢餓は発生せず全員生存可能です。
 
 #### ケース 2: コーダーが奇数人の場合
 人数が奇数の場合、完全に交互に並ぶ対称性が崩れるため、待機タイミングが互い違い（千鳥足状）のウェイトパターンになります。
 * 最悪のケースでは、自分の左右にいる **両隣のコーダー2人** のコンパイル処理が連続して重なり、それらが順番に終わるのを丸々待たされることになります。つまり、 **「2回のコンパイル時間 ＋ 2回のクールダウン時間」** の待機ペナルティが発生します。
 * **最悪値のサイクル公式:**
-$$T_{\text{cycle\_max}} = 3 \times t_{\text{compile}} + 3 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
+$$T_{\text{cycle-max}} = 3 \times t_{\text{compile}} + 3 \times t_{\text{cooldown}} + t_{\text{debug}} + t_{\text{refactor}}$$
 * 奇数人のシミュレーションで生存を担保するためには、偶数人のときよりも大幅に大きな $t_{\text{burnout}}$ のマージン（余裕）が必要になります。
 
 ### 📋 評価用・その場でできる生存判定ワークシート
@@ -531,17 +531,17 @@ $$T_{\text{cycle\_max}} = 3 \times t_{\text{compile}} + 3 \times t_{\text{cooldo
 #### ステップ 2: 人数（$N$）に応じて計算式を選ぶ
 
 * **人数 $N$ が『偶数』の場合 (2, 4, 6, 8...):**
-$$T_{\text{cycle\_max}} = (2 \times t_{\text{comp}}) + (2 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
+$$T_{\text{cycle-max}} = (2 \times t_{\text{comp}}) + (2 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
 
 * **人数 $N$ が『奇数』の場合 (3, 5, 7, 9...):**
-$$T_{\text{cycle\_max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
+$$T_{\text{cycle-max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}}) + t_{\text{dbg}} + t_{\text{ref}}$$
 
 #### ステップ 3: 計算結果と入力値を比較して判定する
-算出した最悪サイクル時間（$T_{\text{cycle\_max}}$）と、引数の $T_{\text{burnout}}$ を比較します：
+算出した最悪サイクル時間（$T_{\text{cycle-max}}$）と、引数の $T_{\text{burnout}}$ を比較します：
 
-* 🟢 **$T_{\text{burnout}} > T_{\text{cycle\_max}}$ の場合 :** 
+* 🟢 **$T_{\text{burnout}} > T_{\text{cycle-max}}$ の場合 :** 
   理論上、リソースの割り当て時間に十分な猶予があります。 **【正常な挙動】全員が一度も燃え尽きることなくノルマを達成して終了します。** （もしこれで誰かが燃え尽きる場合、スレッドの同期漏れやデータレースのバグが存在します）
-* 🔴 **$T_{\text{burnout}} \le T_{\text{cycle\_max}}$ の場合 :** 
+* 🔴 **$T_{\text{burnout}} \le T_{\text{cycle-max}}$ の場合 :** 
   リソースの奪い合いによって誰かが確実に制限時間をオーバーします。**【正常な挙動】高い確率で誰か1人が `burned out` してシミュレーションが停止します。**（なお、EDFモードはFIFOモードに比べて優先度制御が働くため、燃え尽きるまでの生存時間が大幅に伸びます）。
 
 # tester
