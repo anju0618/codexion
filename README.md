@@ -543,3 +543,256 @@ $$T_{\text{cycle\_max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}}
   理論上、リソースの割り当て時間に十分な猶予があります。 **【正常な挙動】全員が一度も燃え尽きることなくノルマを達成して終了します。** （もしこれで誰かが燃え尽きる場合、スレッドの同期漏れやデータレースのバグが存在します）
 * 🔴 **$T_{\text{burnout}} \le T_{\text{cycle\_max}}$ の場合 :** 
   リソースの奪い合いによって誰かが確実に制限時間をオーバーします。**【正常な挙動】高い確率で誰か1人が `burned out` してシミュレーションが停止します。**（なお、EDFモードはFIFOモードに比べて優先度制御が働くため、燃え尽きるまでの生存時間が大幅に伸びます）。
+
+# tester
+
+```bash
+#!/bin/bash
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+BLUE="\033[0;34m"
+RESET="\033[0m"
+
+
+echo -e "${CYAN}==================================================${RESET}"
+echo -e "${CYAN}       Codexion Automated Test Suite            ${RESET}"
+echo -e "${CYAN}==================================================${RESET}"
+
+echo -e "${YELLOW}[1/2] 最新のコードでビルド中... (make re)${RESET}"
+make re > /dev/null
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Error: コンパイルに失敗しました。コードを確認してください。${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}➔ ビルド成功！${RESET}\n"
+
+function wait_user() {
+    echo -e "${BLUE}--------------------------------------------------${RESET}"
+    read -p "エンターキーを押すと次のテストを実行します..."
+    clear
+}
+
+# -----------------------------------------------------------------
+# TEST 1: Easy Test (Normal Execution)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 1] Easy Test: 通常実行（全員生存・ノルマ達成終了）${RESET}"
+echo -e "${YELLOW}Description:${RESET} 全員が燃え尽きることなく5回コンパイルして安全に終了するか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 4 1000 200 200 200 5 0 fifo"
+echo -e "${MAGENTA}Expected:${RESET} 全員が5回ずつコンパイルし、Burnoutのログなしで即座にプロンプトに戻ること。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 4 1000 200 200 200 5 0 fifo
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 2: Cooldown Handling
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 2] Medium Test: クールダウン処理の検証${RESET}"
+echo -e "${YELLOW}Description:${RESET} ドングル解放後の100msの冷却時間が守られ、スタベーションが起きないか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 4 1200 200 200 200 5 100 fifo"
+echo -e "${MAGENTA}Expected:${RESET} クールダウンを挟みつつも、寿命(1200ms)に余裕があるため全員無事にノルマを達成すること。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 4 1200 200 200 200 5 100 fifo
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 3: Burnout Detection (Less Easy)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 3] Less Easy: Burnout（燃え尽き）検知と即時停止${RESET}"
+echo -e "${YELLOW}Description:${RESET} 奇数人数かつ厳しい時間設定で、正確に燃え尽きを検知して10ms以内に全スレッドが止まるか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 400 200 100 100 10 0 fifo"
+echo -e "${MAGENTA}Expected:${RESET} 誰か1人が 'burned out' と出た瞬間に全体のログがピタッと止まり、フリーズせずに終了すること。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 3 400 200 100 100 10 0 fifo
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 4: Scheduler Difference - Part 1 (FIFO / Failure)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 4-1] Medium Test: FIFOでの限界限界テスト（燃え尽き発生）${RESET}"
+echo -e "${YELLOW}Description:${RESET} 先着順（FIFO）では、命が危ない奴を優先できないため燃え尽きる現象を確認します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 600 200 100 100 10 50 fifo"
+echo -e "${MAGENTA}Expected:${RESET} 優先度制御がないため、高確率で誰かが途中で 'burned out' して終了します。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 3 600 200 100 100 10 50 fifo
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 5: Scheduler Difference - Part 2 (EDF / Success)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 4-2] Medium Test: EDFでの限界限界テスト（全員生存）${RESET}"
+echo -e "${YELLOW}Description:${RESET} 全く同じ引数ですが、EDF（締め切り優先）にすることで、ヒープ木が命の危険を察知してごぼう抜き延命させるのを確認します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 600 200 100 100 10 50 edf"
+echo -e "${MAGENTA}Expected:${RESET} 【ウチのヒープ木の真骨頂】さっきは死んだ設定なのに、今度は全員が最後まで生き残りノルマを完遂します！"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 3 600 200 100 100 10 50 edf
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 6: Overflow Validation
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 5] Edge Case: 超巨大な数字の引数（オーバーフロー防御）${RESET}"
+echo -e "${YELLOW}Description:${RESET} intの限界を超えたアホみたいな数字が渡された際、バリデーションで安全に弾けるか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 2 1200 200 200 200 2 10000000000000000000000000000000000000000000 edf"
+echo -e "${MAGENTA}Expected:${RESET} 未定義動作で突き進むのではなく、即座に 'Error: arg 7 must be numeric' 等のエラーを出して安全に終了すること。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 2 1200 200 200 200 2 10000000000000000000000000000000000000000000 edf
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 7: Edge Case (1 Coder)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 6] Edge Case: コーダーが1人しかいない場合${RESET}"
+echo -e "${YELLOW}Description:${RESET} コーダーが1人の時、ドングルも1本しかありません。コンパイルには2本必要なので、1本キープしたまま安全に待機してBurnoutするか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 1 1000 200 200 200 2 0 edf"
+echo -e "${MAGENTA}Expected:${RESET} 1本確保（has taken a dongle）した状態で安全にフリーズを回避し、1000ms後に正確に 'burned out' して安全に終了すること。"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+./codexion 1 1000 200 200 200 2 0 edf
+
+echo -e "\n${GREEN}==================================================${RESET}"
+echo -e "${GREEN}         すべてのテストケースが完了しました！        ${RESET}"
+echo -e "${GREEN}==================================================${RESET}"
+```
+
+save to txt
+```shell
+#!/bin/bash
+
+RESULT_FILE="test_results.txt"
+
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+YELLOW="\033[0;33m"
+CYAN="\033[0;36m"
+BLUE="\033[0;34m"
+MAGENTA="\033[0;35m"
+RESET="\033[0m"
+
+clear
+echo -e "${CYAN}==================================================${RESET}"
+echo -e "${CYAN}       Codexion Automated Test & Logging          ${RESET}"
+echo -e "${CYAN}==================================================${RESET}"
+
+echo "=== Codexion Test Results ===" > $RESULT_FILE
+echo "Generated on: $(date)" >> $RESULT_FILE
+echo -e "➔ ログファイル ${YELLOW}${RESULT_FILE}${RESET} を初期化しました。"
+
+echo -e "${YELLOW}[1/2] 最新のコードでビルド中... (make re)${RESET}"
+make re > /dev/null
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Error: コンパイルに失敗しました。${RESET}"
+    exit 1
+fi
+echo -e "${GREEN}➔ ビルド成功！${RESET}\n"
+
+function wait_user() {
+    echo -e "${BLUE}--------------------------------------------------${RESET}"
+    read -p "エンターキーを押すと次のテストを実行します..."
+    clear
+}
+
+
+function log_title() {
+    echo -e "\n==================================================" >> $RESULT_FILE
+    echo "  $1" >> $RESULT_FILE
+    echo "==================================================" >> $RESULT_FILE
+}
+
+# -----------------------------------------------------------------
+# TEST 1: Easy Test (Normal Execution)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 1] Easy Test: 通常実行（全員生存・ノルマ達成終了）${RESET}"
+echo -e "${YELLOW}Description:${RESET} 全員が燃え尽きることなく5回コンパイルして安全に終了するか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 4 1000 200 200 200 5 0 fifo"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 1: ./codexion 4 1000 200 200 200 5 0 fifo"
+# tee -a で画面に出しつつファイルにも追記
+./codexion 4 1000 200 200 200 5 0 fifo 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 2: Cooldown Handling
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 2] Medium Test: クールダウン処理の検証${RESET}"
+echo -e "${YELLOW}Description:${RESET} ドングル解放後の100msの冷却時間が守られ、スタベーションが起きないか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 4 1200 200 200 200 5 100 fifo"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 2: ./codexion 4 1200 200 200 200 5 100 fifo"
+./codexion 4 1200 200 200 200 5 100 fifo 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 3: Burnout Detection (Less Easy)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 3] Less Easy: Burnout（燃え尽き）検知と即時停止${RESET}"
+echo -e "${YELLOW}Description:${RESET} 正確に燃え尽きを検知して10ms以内に全スレッドが止まるか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 400 200 100 100 10 0 fifo"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 3: ./codexion 3 400 200 100 100 10 0 fifo"
+./codexion 3 400 200 100 100 10 0 fifo 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 4: Scheduler Difference - Part 1 (FIFO / Failure)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 4-1] Medium Test: FIFOでの限界テスト（燃え尽き発生）${RESET}"
+echo -e "${YELLOW}Description:${RESET} 先着順（FIFO）では、命が危ない奴を優先できないため燃え尽きる現象を確認します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 600 200 100 100 10 50 fifo"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 4-1: ./codexion 3 600 200 100 100 10 50 fifo"
+./codexion 3 600 200 100 100 10 50 fifo 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 5: Scheduler Difference - Part 2 (EDF / Success)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 4-2] Medium Test: EDFでの限界テスト（全員生存）${RESET}"
+echo -e "${YELLOW}Description:${RESET} EDF（締め切り優先）にすることで、ヒープ木が命の危険を察知してごぼう抜き延命させるのを確認します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 3 600 200 100 100 10 50 edf"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 4-2: ./codexion 3 600 200 100 100 10 50 edf"
+./codexion 3 600 200 100 100 10 50 edf 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 6: Overflow Validation
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 5] Edge Case: 超巨大な数字の引数（オーバーフロー防御）${RESET}"
+echo -e "${YELLOW}Description:${RESET} intの限界を超えた数字が渡された際、バリデーションで安全に弾けるか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 2 1200 200 200 200 2 10000000000000000000000000000000000000000000 edf"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 5: Overflow case"
+./codexion 2 1200 200 200 200 2 10000000000000000000000000000000000000000000 edf 2>&1 | tee -a $RESULT_FILE
+
+wait_user
+
+# -----------------------------------------------------------------
+# TEST 7: Edge Case (1 Coder)
+# -----------------------------------------------------------------
+echo -e "${GREEN}[TEST 6] Edge Case: コーダーが1人しかいない場合${RESET}"
+echo -e "${YELLOW}Description:${RESET} 1本確保（has taken a dongle）した状態で安全にフリーズを回避し、1000ms後に正確にburned outするか検証します。"
+echo -e "${CYAN}Command:${RESET} ./codexion 1 1000 200 200 200 2 0 edf"
+echo -e "${BLUE}--- 実行開始 ---${RESET}"
+
+log_title "TEST 6: ./codexion 1 1000 200 200 200 2 0 edf"
+./codexion 1 1000 200 200 200 2 0 edf 2>&1 | tee -a $RESULT_FILE
+
+echo -e "\n${GREEN}==================================================${RESET}"
+echo -e "${GREEN}         すべてのテストケースが完了しました！        ${RESET}"
+echo -e "${GREEN}➔ ログが ${YELLOW}${RESULT_FILE}${RESET} に自動保存されました。${RESET}"
+echo -e "${GREEN}==================================================${RESET}"
+```
