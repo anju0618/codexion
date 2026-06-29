@@ -93,56 +93,6 @@ pthread_cond_t (Condition Variable):
 
 dongle->cond: When a dongle is in use or on cooldown, attempting threads enter a waiting state using pthread_cond_wait to avoid unnecessary CPU resource consumption. When a dongle is released, pthread_cond_broadcast is called to awaken waiting threads, enabling efficient inter-thread communication. It is also used during burnout detection by the monitor to safely guide all threads to termination.
 
-## Test Cases for Evaluation (Grading Guide)
-
-This section provides a set of validated test cases matching the official evaluation scale. Copy and paste these commands to verify the correctness of the simulation.
-
-> ⚠️ **Evaluation Constraints Checked:** All tests use fewer than 200 coders and timing values greater than 60ms to ensure reliable OS scheduling.
-
-### 1. Easy Test: Normal Execution (No Burnout)
-Verifies that all threads complete their required compiles and terminate cleanly without memory leaks or deadlocks under a basic configuration.
-```bash
-./codexion 4 1000 200 200 200 5 0 fifo
-```
-Expected Behavior: All 4 coders successfully compile 5 times. The simulation stops immediately when the total compile requirement is fulfilled. No one burns out.
-
-### 2. Medium Test: Cooldown Handling & Sync
-Tests whether the custom event loop and condition variables correctly respect the dongle_cooldown constraint without causing thread starvation.
-```bash
-./codexion 4 1200 200 200 200 5 100 fifo
-```
-Expected Behavior: Coders will wait precisely for the 100ms cooldown to expire before grabbing the same dongle again. Since time_to_burnout (1200ms) leaves enough margin, the simulation will still complete successfully without burnouts.
-
-### 3. Less Easy Test: Burnout Detection & 10ms Tolerance
-Validates that the monitor thread precisely detects a burnout condition and prints the final log within 10ms of the actual deadline.
-```bash
-./codexion 3 400 200 100 100 10 0 fifo
-```
-Expected Behavior: Due to resource contention among an odd number of coders, at least one coder will inevitably miss their deadline and burn out. Verify that the simulation halts instantly, all sleeping threads are safely awakened, and the process terminates with no logs printed after the burned out message.
-
-### 4. Medium Test: Scheduler Difference (FIFO vs EDF)
-Demonstrates the algorithmic superiority of the Earliest Deadline First (EDF) scheduler over standard First-In, First-Out (FIFO) when resources are highly constrained.
-
-Run with FIFO (Starvation/Burnout Case):
-```bash
-./codexion 3 600 200 100 100 10 50 fifo
-```
-Expected Behavior: In FIFO mode, a coder with a relaxed deadline might grab a dongle ahead of a starving peer simply because they requested it a fraction of a millisecond earlier. This will result in a Burnout.
-
-Run with EDF (Survival Case):
-```bash
-./codexion 3 600 200 100 100 10 50 edf
-```
-Expected Behavior: In EDF mode, the priority heap dynamically rearranges the waiting list. The coder whose deadline is closest will "leapfrog" to the front of the queue. Thanks to this preemption, all coders manage to survive and complete their quotas.
-
-### 5. Stress Test: Log Serialization & Thread Safety
-Spawns a massive amount of threads to stress-test the print_mutex and check for interleaved log lines or data races.
-
-```bash
-./codexion 150 3000 200 200 200 2 10 edf
-```
-Expected Behavior: 150 coder threads and 1 monitor thread will run concurrently. The output must be perfectly serialized (no overlapping text or mixed lines). The simulation must terminate cleanly.
-
 ## Mathematical Model for Burnout Prevention (Survival Analysis)
 
 To scientifically evaluate whether a given set of simulation parameters is execution-safe or guaranteed to cause resource starvation, we can model a coder's complete behavioral cycle using the following formula:
@@ -437,56 +387,6 @@ deadline（燃え尽き時刻）がより直近（小さい数字）であるコ
 ミリ秒まで完全に同点だった場合は、「IDが小さい方を優先する（a->id < b->id）」 というルールにより、プログラムの挙動が運任せになるのを防ぎ、再現性を担保しています。
 
 
-## 評価用テストケース
-
-本セクションでは、公式の評価シートの基準に完全準拠したテストケースを提供します
-
-> ⚠️ **⚠️ 評価の制約チェック:** OSのスケジューリングの揺らぎによる不具合を防ぐため、すべてのテストケースは「コーダー数200人以下」「各待機時間60ms以上」の公式ルールを厳格に守っています。
-
-### 1. Easyテスト: 通常実行（燃え尽きなし）
-特別な問題を起こさず、すべてのスレッドが規定のコンパイル回数を達成し、メモリリークやデッドロックなしで安全に終了することを確認します。
-```bash
-./codexion 4 1000 200 200 200 5 0 fifo
-```
-期待される挙動: 4人のコーダー全員が5回ずつコンパイルを成功させます。規定回数を満たした瞬間にシミュレーションが即座に正常終了し、誰も燃え尽き（Burnout）ません。
-
-### 2. Mediumテスト: クールダウン処理と同期の検証
-ドングリ解放後のクールダウン制約（dongle_cooldown）が正確に守られ、スレッドのStarvationが発生しないか検証します。
-```bash
-./codexion 4 1200 200 200 200 5 100 fifo
-```
-期待される挙動: 各コーダーは、同じドングルを再取得する前に、設定された100msのクールダウン時間が経過するのを正確に待機します。time_to_burnout (1200ms) に十分な猶予があるため、誰も燃え尽きることなくノルマを達成します。
-
-### 3. Less Easyテスト: Burnout（燃え尽き）検知と10msの許容誤差
-モニタースレッドがコーダーの寿命（デッドライン）を正確に監視し、タイムアウト発生から10ms以内に確実にBurnoutログを出力して停止するかを検証します。
-```bash
-./codexion 3 400 200 100 100 10 0 fifo
-```
-期待される挙動: 奇数人数のためドングルの奪い合いが発生し、少なくとも1人のコーダーがデッドラインに間に合わず確実に燃え尽きます。燃え尽きを検知した瞬間にシミュレーションが即座に停止し、待合室で眠っていた他のスレッドも安全に叩き起こされて全体が終了します。burned out の行より後に余計なログが出力されないことを確認してください。
-
-### Mediumテスト: スケジューラの挙動の違い（FIFO vs EDF）
-リソースが極めて厳しい限界状況において、到着順（FIFO）と締め切り優先（EDF）でアルゴリズムの生存率にどのような差が出るかを比較検証します。
-
-FIFO（先着順）で実行する場合（燃え尽き発生ケース）:
-```bash
-./codexion 3 600 200 100 100 10 50 fifo
-```
-期待される挙動: FIFOモードでは、寿命に余裕があるコーダーであっても、ミリ秒単位で先にリクエストを出していればドングルを獲得してしまいます。その結果、命がギリギリの他のコーダーにドングルが回らず、確実にBurnout（燃え尽き）が発生します。
-
-EDF（締め切り優先）で実行する場合（全員生存ケース）:
-```bash
-./codexion 3 600 200 100 100 10 50 edf
-```
-期待される挙動: EDFモードでは、独自の優先度付きヒープキューが待機列を動的に並び替えます。あと一歩で燃え尽きそうなコーダーが列の先頭にごぼう抜きで割り込む（優先される）ため、全員が絶妙に延命し合ってノルマを完遂します。
-
-### 5. ストレステスト: ログのシリアライズとスレッドセーフ
-大量のスレッドを同時に走らせ、出力用Mutex（print_mutex）が正常に機能しているか、データレースやログの行崩れが起きないかを検証します。
-
-```bash
-./codexion 150 3000 200 200 200 2 10 edf
-```
-期待される挙動: 150人のコーダースレッドと1人のモニタースレッドが完全並行で動作します。画面に出力される文字が一切重なったり途中で千切れたりせず、1行ずつ綺麗にシリアライズされて表示され、最終的に安全にクリーンアップされて終了します。
-
 ## 燃え尽き防止の数理モデル（生存・飢餓）redditの投稿を参考にしたので、間違ってたらスマソ
 
 与えられた入力パラメータがシミュレーション上安全なのか、それとも不可避な飢餓（スターベーション）や燃え尽きを引き起こすのかを判定するため、コーダーの1サイクルの行動を以下の数式モデルで定義:
@@ -545,6 +445,29 @@ $$T_{\text{cycle-max}} = (3 \times t_{\text{comp}}) + (3 \times t_{\text{cool}})
   リソースの奪い合いによって誰かが確実に制限時間をオーバーします。**【正常な挙動】高い確率で誰か1人が `burned out` してシミュレーションが停止します。**（なお、EDFモードはFIFOモードに比べて優先度制御が働くため、燃え尽きるまでの生存時間が大幅に伸びます）。
 
 # tester
+
+１，全員生存・正常終了
+
+検証内容: 200人以下、60ms以上。誰も燃え尽きず規定回数をクリアして安全に終わるか。寿命に圧倒的なマージンを持たせる
+./codexion 4 1200 200 100 100 5 0 edf
+./codexion 15 2000 200 150 150 5 20 edf
+./codexion 4 2000 200 100 100 10 0 edf
+
+２Burnout検知と10msの精度
+検証内容: 確実に誰かを燃え尽きさせ、モニターがデッドラインから10ms以内に正確にログを出してシステムを緊急停止できるか。絶対にクリア不可能
+./codexion 1 500 200 100 100 5 0 fifo
+./codexion 3 300 200 100 100 5 10 fifo / ※最初の2人が200msコンパイルしている間に、あぶれた1人が300msで確実に餓死
+
+3. Codexion testing — Medium: Cooldown behavior（クールダウンの検証）
+検証内容: ドングル解放後のクールダウン時間が厳密に守られるか
+./codexion 4 1500 200 100 100 5 200 fifo クリア不能
+./codexion 4 3500 200 100 100 5 200 fifo
+
+
+4. Codexion testing — Medium: Scheduler differences
+【要件】 FIFOだと確実に死ぬが、EDFだとキューの並び替えによって「絶対に全員生存」する
+./codexion 4 400 100 100 100 15 20 fifo
+./codexion 4 400 100 100 100 15 20 edf
 
 ```bash
 #!/bin/bash
